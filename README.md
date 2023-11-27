@@ -7,10 +7,14 @@ currently in a rushed state.
 
 ## How to use
 
-Open a terminal in the current folder and just run the `main.py` file with python. You may need to install packages
-first:
+Install the dependencies with pip:
 
 ```bash
 pip install -r ./requirements.txt
+```
+
+Then run the `main.py` file with python:
+
+```bash
 python ./main.py
 ```
