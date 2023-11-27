@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 
 Card = tuple[str, str]
 
+maxAcceptableDistance = 1
+
 splitAnswer = re.compile(r"[/,;]")
 splitReplacer = "' or '"
 
@@ -51,9 +53,9 @@ def learnProcess(terms: list[Card]):
             print(f"Cards left in group: {len(group)}")
             card = group.pop(-1)
             questionSide = sideFct()
-            correctAnswers = splitAnswer.split(card[1 - questionSide])
+            correctAnswers = [a.strip() for a in splitAnswer.split(card[1 - questionSide])]
             answer = input(card[questionSide] + " : ").strip()
-            distance = min(lv.distance(answer, correctAnswer.strip()) for correctAnswer in correctAnswers)
+            distance = min(lv.distance(answer, correctAnswer, score_cutoff=maxAcceptableDistance) for correctAnswer in correctAnswers)
 
             if distance == 0:
                 # perfect answer
@@ -63,7 +65,7 @@ def learnProcess(terms: list[Card]):
                     group.insert(0, card)
                 else:
                     learnt.append(card)
-            elif distance == 1:
+            elif distance <= maxAcceptableDistance:
                 # almost perfect answer
                 start = (random.choice(["Almost!", "Close!", "Not quite!", "Nearly!"]) +
                          f" The correct answer was '{splitReplacer.join(correctAnswers)}' but I gotchu")
@@ -74,7 +76,7 @@ def learnProcess(terms: list[Card]):
                     learnt.append(card)
             else:
                 # wrong answer
-                start = (random.choice(["Wrong!", "Incorrect!", "Not quite!", "Nope!"]) +
+                start = (random.choice(["Wrong.", "Incorrect.", "Not at all...", "Nope."]) +
                          f" The correct answer was '{splitReplacer.join(correctAnswers)}'")
                 iWasCorrect = input(f"{start} If you were right, type 'x' and press enter, else press enter\n") == "x"
                 if iWasCorrect:
@@ -108,6 +110,10 @@ Safari (3)
     driver.get(link)
 
     containers = driver.find_elements(By.CLASS_NAME, "SetPageTerm-content")
+    if len(containers) == 0:
+        print("No cards found, please check if the link is correct")
+        sys.exit(0)
+
     items: list[Card] = []
     for container in containers:
         spans = container.find_elements(By.TAG_NAME, "span")
