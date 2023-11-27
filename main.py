@@ -1,11 +1,15 @@
 import sys
 import random
 import Levenshtein as lv
+import re
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 Card = tuple[str, str]
+
+splitAnswer = re.compile(r"[/,;]")
+splitReplacer = "' or '"
 
 
 def learnProcess(terms: list[Card]):
@@ -47,39 +51,38 @@ def learnProcess(terms: list[Card]):
             print(f"Cards left in group: {len(group)}")
             card = group.pop(-1)
             questionSide = sideFct()
-            correctAnswer = card[1 - questionSide]
+            correctAnswers = splitAnswer.split(card[1 - questionSide])
             answer = input(card[questionSide] + " : ")
-            distance = lv.distance(answer, correctAnswer)
+            distance = min(lv.distance(answer, correctAnswer) for correctAnswer in correctAnswers)
+
             if distance == 0:
                 # perfect answer
-                print(random.choice(["Perfect!", "Great!", "Awesome!", "Good job!", "Nice!"]))
-                cancel = input("if you were wrong, type 'x' and press enter, else press enter: ") == "x"
+                start = random.choice(["Perfect!", "Great!", "Awesome!", "Good job!", "Nice!"])
+                cancel = input(f"{start} If you were wrong, type 'x' and press enter, else press enter\n") == "x"
                 if cancel:
                     group.insert(0, card)
                 else:
                     learnt.append(card)
             elif distance == 1:
                 # almost perfect answer
-                print(random.choice(["Almost!", "Close!", "Not quite!", "Nearly!"]) +
-                      f" The correct answer was {correctAnswer} but I gotchu")
-                cancel = input("if you were wrong, type 'x' and press enter, else press enter: ") == "x"
+                start = (random.choice(["Almost!", "Close!", "Not quite!", "Nearly!"]) +
+                         f" The correct answer was '{splitReplacer.join(correctAnswers)}' but I gotchu")
+                cancel = input(f"{start} If you were wrong, type 'x' and press enter, else press enter\n") == "x"
                 if cancel:
                     group.insert(0, card)
                 else:
                     learnt.append(card)
             else:
                 # wrong answer
-                print(random.choice(["Wrong!", "Incorrect!", "Not quite!", "Nope!"]) +
-                      f" The correct answer was {correctAnswer}")
-                iWasCorrect = input("if you were right, type 'x' and press enter, else press enter: ") == "x"
+                start = (random.choice(["Wrong!", "Incorrect!", "Not quite!", "Nope!"]) +
+                         f" The correct answer was '{splitReplacer.join(correctAnswers)}'")
+                iWasCorrect = input(f"{start} If you were right, type 'x' and press enter, else press enter\n") == "x"
                 if iWasCorrect:
                     group.insert(0, card)
                 else:
                     learnt.append(card)
         print("Group learnt!")
     print("All cards learnt! Congratulations!")
-
-
 
 
 if __name__ == '__main__':
@@ -90,7 +93,7 @@ Firefox (1)
 Edge (2)
 Safari (3)
 """)
-    print("Starting browser...")
+    print("Starting browser, please wait...")
     if browser in ["", "0"]:
         driver = webdriver.Chrome()
     elif browser == "1":
