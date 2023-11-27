@@ -52,8 +52,8 @@ def learnProcess(terms: list[Card]):
             card = group.pop(-1)
             questionSide = sideFct()
             correctAnswers = splitAnswer.split(card[1 - questionSide])
-            answer = input(card[questionSide] + " : ")
-            distance = min(lv.distance(answer, correctAnswer) for correctAnswer in correctAnswers)
+            answer = input(card[questionSide] + " : ").strip()
+            distance = min(lv.distance(answer, correctAnswer.strip()) for correctAnswer in correctAnswers)
 
             if distance == 0:
                 # perfect answer
@@ -78,9 +78,9 @@ def learnProcess(terms: list[Card]):
                          f" The correct answer was '{splitReplacer.join(correctAnswers)}'")
                 iWasCorrect = input(f"{start} If you were right, type 'x' and press enter, else press enter\n") == "x"
                 if iWasCorrect:
-                    group.insert(0, card)
-                else:
                     learnt.append(card)
+                else:
+                    group.insert(0, card)
         print("Group learnt!")
     print("All cards learnt! Congratulations!")
 
