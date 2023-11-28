@@ -57,23 +57,31 @@ def learnProcess(terms: list[Card]):
             answer = input(card[questionSide] + " : ").strip()
             distance = min(lv.distance(answer, correctAnswer, score_cutoff=maxAcceptableDistance) for correctAnswer in correctAnswers)
 
-            if distance == 0:
-                # perfect answer
-                start = random.choice(["Perfect!", "Great!", "Awesome!", "Good job!", "Nice!"])
-                cancel = input(f"{start} If you were wrong, type 'x' and press enter, else press enter\n") == "x"
+            def correct(cancel: bool):
                 if cancel:
                     group.insert(0, card)
                 else:
                     learnt.append(card)
+
+            if distance == 0:
+                # perfect answer
+                start = random.choice(["Perfect!", "Great!", "Awesome!", "Good job!", "Nice!"])
+                cancel = input(f"{start} If you were wrong, type 'x' and press enter, else press enter\n") == "x"
+                correct(cancel)
             elif distance <= maxAcceptableDistance:
                 # almost perfect answer
                 start = (random.choice(["Almost!", "Close!", "Not quite!", "Nearly!"]) +
                          f" The correct answer was '{splitReplacer.join(correctAnswers)}' but I gotchu")
                 cancel = input(f"{start} If you were wrong, type 'x' and press enter, else press enter\n") == "x"
-                if cancel:
-                    group.insert(0, card)
-                else:
+                correct(cancel)
+            elif len(answer) >= 5 and any(answer in correctAnswer for correctAnswer in correctAnswers):
+                start = (f"Some part of the answer are missing. "
+                         f"The correct answer was '{splitReplacer.join(correctAnswers)}'")
+                iWasCorrect = input(f"{start} If you were right, type 'x' and press enter, else press enter\n") == "x"
+                if iWasCorrect:
                     learnt.append(card)
+                else:
+                    group.insert(0, card)
             else:
                 # wrong answer
                 start = (random.choice(["Wrong.", "Incorrect.", "Not at all...", "Nope."]) +
